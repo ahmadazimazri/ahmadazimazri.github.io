@@ -3,10 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello World</title>
+    <title>Ahmad Azim Azri's GitHub Pages Projects</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f6f8fa;
+            color: #24292e;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #fff;
+            border: 1px solid #d1d5da;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            border-bottom: 1px solid #eaecef;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            color: #0366d6;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            padding: 15px 0;
+            border-bottom: 1px solid #eaecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap; /* Allow wrapping for smaller screens */
+        }
+        li:last-child {
+            border-bottom: none;
+        }
+        a {
+            color: #0366d6;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1em;
+            word-break: break-all; /* Prevent long repo names from overflowing */
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .repo-description {
+            color: #586069;
+            font-size: 0.9em;
+            margin-top: 5px;
+            width: 100%; /* Take full width below the link */
+        }
+        .loading, .error {
+            text-align: center;
+            font-style: italic;
+            color: #586069;
+            padding: 20px;
+        }
+        .view-button {
+            display: inline-block;
+            margin-left: 15px; /* Space between repo name and button */
+            padding: 5px 12px;
+            font-size: 0.9em;
+            color: #fff;
+            background-color: #28a745;
+            border: 1px solid rgba(27,31,35,.15);
+            border-radius: 6px;
+            box-shadow: 0 1px 0 rgba(27,31,35,.04);
+            white-space: nowrap;
+        }
+         .view-button:hover {
+            background-color: #218838;
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
-    <h1>Hello World</h1>
-    <p>This is a simple HTML page.</p>
+
+    <div class="container">
+        <h1>My GitHub Pages Projects</h1>
+
+        <div id="loading" class="loading">
+            <p>Loading projects...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <ul id="pages-list">
+            </ul>
+    </div>
+
+    <script>
+        // Your GitHub username
+        const username = "ahmadazimazri";
+        // API URL to fetch repositories for the user
+        // Fetches all repositories owned by the user, sorted by last update, up to 100 per page
+        const apiUrl = `https://api.github.com/users/${username}/repos?type=owner&sort=updated&per_page=100`;
+
+        // Get references to HTML elements
+        const listElement = document.getElementById('pages-list');
+        const loadingElement = document.getElementById('loading');
+        const errorElement = document.getElementById('error');
+
+        // Fetch repositories from GitHub API
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    // Throw an error if response status is not OK (e.g., 404, 500)
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                // Parse the JSON response
+                return response.json();
+            })
+            .then(repos => {
+                // Hide loading message
+                loadingElement.style.display = 'none';
+
+                // Filter repositories that have GitHub Pages enabled
+                const pagesRepos = repos.filter(repo => repo.has_pages);
+
+                if (pagesRepos.length === 0) {
+                    // Display message if no repositories with Pages are found
+                    listElement.innerHTML = '<li>No public repositories with GitHub Pages found.</li>';
+                } else {
+                    // Iterate over repositories with Pages and create list items
+                    pagesRepos.forEach(repo => {
+                        // Construct the GitHub Pages URL
+                        // Assumes standard <username>.github.io/<repo-name> format
+                        // Exclude the special <username>.github.io repo itself unless you want it listed
+                        if (repo.name !== `${username}.github.io`) {
+                            const pagesUrl = `https://${username}.github.io/${repo.name}/`;
+                            const repoUrl = repo.html_url; // Link to the repository itself
+
+                            // Create list item element
+                            const listItem = document.createElement('li');
+
+                            // Create link to the GitHub Pages site
+                            const link = document.createElement('a');
+                            link.href = pagesUrl;
+                            link.textContent = repo.name; // Display repository name
+                            link.target = "_blank"; // Open in new tab
+                            link.rel = "noopener noreferrer";
+
+                            // Create view button link
+                            const viewButton = document.createElement('a');
+                            viewButton.href = pagesUrl;
+                            viewButton.textContent = "View Site";
+                            viewButton.target = "_blank";
+                            viewButton.rel = "noopener noreferrer";
+                            viewButton.className = "view-button";
+
+
+                            // Create description element (optional)
+                            const description = document.createElement('div');
+                            description.className = 'repo-description';
+                            description.textContent = repo.description || 'No description provided.'; // Show description or fallback text
+
+                            // Assemble the list item content
+                            const linkContainer = document.createElement('div'); // Container for repo name link
+                            linkContainer.style.flexGrow = '1'; // Allow repo name to take available space
+                            linkContainer.appendChild(link);
+
+                            const contentContainer = document.createElement('div'); // Container for link and button
+                            contentContainer.style.display = 'flex';
+                            contentContainer.style.alignItems = 'center';
+                            contentContainer.style.width = '100%'; // Ensure it takes full width for wrapping
+                            contentContainer.style.marginBottom = '5px'; // Space before description
+                            contentContainer.appendChild(linkContainer);
+                            contentContainer.appendChild(viewButton);
+
+
+                            listItem.appendChild(contentContainer);
+                            listItem.appendChild(description);
+
+
+                            // Append the list item to the list
+                            listElement.appendChild(listItem);
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                // Hide loading message
+                loadingElement.style.display = 'none';
+                // Display error message
+                errorElement.textContent = `Failed to load projects: ${error.message}. Check the console for more details.`;
+                errorElement.style.display = 'block';
+                console.error('Error fetching GitHub repositories:', error);
+            });
+    </script>
+
 </body>
 </html>
